@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="ko" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>기도제목 요청 및 공동체방</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&amp;family=Playfair+Display:ital,wght@0,700;1,700&amp;display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans KR"', 'sans-serif'],
+            display: ['"Playfair Display"', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes floatUp {
+      0% { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    @keyframes confetti-fall {
+      0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(60px) rotate(360deg); opacity: 0; }
+    }
+    .float-up { animation: floatUp 0.6s ease-out forwards; }
+    .float-up-1 { animation-delay: 0.1s; opacity: 1; }
+    .float-up-2 { animation-delay: 0.2s; opacity: 1; }
+    .shimmer-text {
+      background: linear-gradient(90deg, #a855f7, #d946ef, #ec4899, #a855f7);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 3s linear infinite;
+    }
+    .submit-btn {
+      background: linear-gradient(135deg, #7c3aed, #a855f7, #d946ef);
+      background-size: 200% 200%;
+      transition: all 0.4s ease;
+    }
+    .submit-btn:hover {
+      background-position: right center;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(168, 85, 247, 0.35);
+    }
+    .submit-btn:disabled {
+      opacity: 0.4; transform: none; box-shadow: none; cursor: not-allowed;
+    }
+    .toast-enter { animation: floatUp 0.4s ease-out; }
+    input:focus, textarea:focus, select:focus {
+      outline: none !important;
+      box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.5) !important;
+      border-color: #a855f7 !important;
+    }
+    #user-name, #urgent-contact, #prayer-text {
+      color: #ffffff !important; caret-color: #ffffff !important;
+    }
+    #user-name::placeholder, #urgent-contact::placeholder, #prayer-text::placeholder {
+      color: #9ca3af !important;
+    }
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+    select { appearance: none; }
+    select option {
+      background: rgba(30, 27, 59, 0.95); color: #e5e7eb;
+      border: 1px solid rgba(168, 85, 247, 0.3); padding: 12px 8px; margin: 4px 0;
+    }
+    .confetti-piece {
+      position: absolute; width: 8px; height: 8px; border-radius: 2px;
+      animation: confetti-fall 1.5s ease-out forwards;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #a78bfa; border-radius: 99px; }
+    
+    .section-title {
+      font-size: clamp(0.95rem, 2.5vw, 1.1rem); font-weight: 700; color: #f3f4f6;
+      margin-bottom: clamp(1.25rem, 4vw, 1.75rem); display: flex; align-items: center; gap: 0.5rem;
+    }
+    .section-title-number { color: #fbbf24; font-size: clamp(0.9rem, 2vw, 1.05rem); }
+    .section-title-divider { flex: 1; height: 1px; background: rgba(251, 191, 36, 0.5); }
+    .field-label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #f3f4f6; font-size: 0.9rem; }
+    .required-badge { color: #fbbf24; font-weight: 700; }
+    .sidebar-transition { transition: transform 0.3s ease-in-out; }
+    .overlay-transition { transition: opacity 0.3s ease-in-out; }
+  </style>
+ </head>
+ <body class="h-full text-neutral-100 font-sans overflow-hidden" style="background: linear-gradient(135deg, #2d1b69 0%, #3d2680 50%, #2d1b69 100%); margin: 0; padding: 0;">
+  
+  <header class="w-full fixed top-0 left-0 z-40 bg-opacity-30 bg-black backdrop-blur-md border-b border-purple-900/40 px-4 py-3 flex items-center justify-between">
+    <button onclick="toggleSidebar(true)" class="p-2 hover:bg-white/10 rounded-xl transition-all">
+      <i data-lucide="menu" class="w-6 h-6 text-violet-200"></i>
+    </button>
+    <div class="text-center">
+      <span class="text-xs font-semibold tracking-wider text-violet-300">한소망교회 고등부</span>
+    </div>
+    <div class="w-10"></div>
+  </header>
+
+  <div id="sidebar-overlay" onclick="toggleSidebar(false)" class="fixed inset-0 bg-black/60 z-40 hidden opacity-0 overlay-transition"></div>
+
+  <aside id="sidebar" class="fixed top-0 left-0 bottom-0 w-72 bg-[#1e1b3b]/95 border-r border-purple-800/60 z-50 transform -translate-x-full sidebar-transition flex flex-col justify-between p-6">
+    <div class="space-y-8">
+      <div class="flex items-center justify-between border-b border-purple-900/60 pb-4">
+        <h3 class="font-black text-xl shimmer-text font-display">Prayer Menu</h3>
+        <button onclick="toggleSidebar(false)" class="p-1.5 hover:bg-white/10 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <nav class="space-y-3">
+        <button onclick="switchTab('submit')" id="menu-submit-btn" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-violet-600/30 text-white font-bold border border-violet-500/40 text-left transition-all">
+          <i data-lucide="send" class="w-5 h-5 text-violet-400"></i> <span>🕊️ 기도제목 보내기</span>
+        </button>
+        <button onclick="switchTab('community')" id="menu-community-btn" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-violet-200 hover:bg-white/5 font-medium text-left transition-all">
+          <i data-lucide="users" class="w-5 h-5 text-violet-400"></i> <span>⛪ 공동체 기도방</span>
+        </button>
+      </nav>
+    </div>
+
+    <div class="bg-purple-950/50 border border-purple-800/40 rounded-2xl p-4 text-center">
+      <div class="text-amber-400 mb-1.5"><i data-lucide="book-open" class="w-4 h-4 inline-block"></i> <span class="text-xs font-bold uppercase tracking-wider">오늘의 말씀</span></div>
+      <p id="word-text" class="text-xs leading-relaxed text-purple-100 italic mb-2">"구하라 그리하면 너희에게 주실 것이요 찾으라 그리하면 찾아낼 것이요"</p>
+      <span id="word-ref" class="text-[10px] text-purple-400">(마 7:7)</span>
+    </div>
+  </aside>
+
+  <div id="app-wrapper" class="h-full w-full overflow-auto pt-16 flex flex-col relative z-10">
+    <div class="relative w-full max-w-md mx-auto px-4 py-6 flex-grow flex flex-col justify-start">
+      
+      <main id="tab-submit" class="w-full space-y-6 float-up float-up-1">
+        <header class="text-center py-4">
+         <h1 id="main-title" class="font-black mb-2 shimmer-text font-display text-4xl">Prayer Request</h1>
+         <p id="subtitle-text" class="text-violet-200 font-light text-sm">하나님께 마음을 나누는 안전한 공간</p>
+        </header>
+
+        <form id="prayer-form" onsubmit="handleSubmit(event)" novalidate class="space-y-5">
+          <section class="rounded-2xl p-5 bg-[#1e1b3b]/90 border border-purple-500/40">
+           <h2 class="section-title"><span class="section-title-number">01</span> <span class="section-title-divider"></span> <span class="text-right text-sm text-neutral-300">인적사항</span></h2>
+           <div class="space-y-4">
+            <div>
+              <label for="user-name" class="field-label"><span class="required-badge">*</span> 이름</label>
+              <input type="text" id="user-name" placeholder="이름을 입력해 주세요" class="w-full h-11 px-4 rounded-xl bg-[#1e1b3b]/60 border border-purple-500/30 text-sm" maxlength="20">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+             <div>
+              <label class="field-label"><span class="required-badge">*</span> 성별</label>
+              <div class="flex gap-2">
+                <button type="button" class="flex-1 h-11 gender-btn rounded-xl border border-purple-500/30 text-neutral-400 bg-[#1e1b3b]/60 text-sm transition-all" onclick="selectGender('남자')">남자</button>
+                <button type="button" class="flex-1 h-11 gender-btn rounded-xl border border-purple-500/30 text-neutral-400 bg-[#1e1b3b]/60 text-sm transition-all" onclick="selectGender('여자')">여자</button>
+              </div>
+             </div>
+             <div>
+              <label for="user-grade" class="field-label"><span class="required-badge">*</span> 마을</label>
+              <select id="user-grade" class="w-full h-11 px-4 rounded-xl bg-[#1e1b3b]/60 border border-purple-500/30 text-sm text-neutral-400 cursor-pointer">
+                <option value="" disabled selected>선택해 주세요</option>
+                <option value="고1">고1 마을</option> <option value="고2">고2 마을</option> <option value="고3">고3 마을</option> <option value="중등">중등 마을</option>
+              </select>
+             </div>
+            </div>
+           </div>
+          </section>
+
+          <section class="rounded-2xl p-5 bg-[#1e1b3b]/90 border border-purple-500/40">
+           <h2 class="section-title"><span class="section-title-number">02</span> <span class="section-title-divider"></span> <span class="text-right text-sm text-neutral-300">기도제목</span></h2>
+           <label for="prayer-text" class="field-label"><span class="required-badge">*</span> 나의 기도</label>
+           <textarea id="prayer-text" maxlength="1500" placeholder="구체적인 상황을 적어주시면 마음에 새겨 함께 기도하겠습니다." class="w-full h-40 px-4 py-3 rounded-xl bg-[#1e1b3b]/60 border border-purple-500/30 text-sm resize-none" oninput="updateCharCount()"></textarea>
+           <div class="flex justify-end mt-1 text-xs text-violet-300" id="char-count">0/1500</div>
+           
+           <div class="flex items-start gap-3 pt-4 mt-3 border-t border-purple-900/60">
+            <input type="checkbox" id="urgent-check" class="w-5 h-5 text-indigo-600 border-purple-500/30 rounded focus:ring-purple-500 bg-[#1e1b3b]/60 cursor-pointer mt-0.5" onchange="updateUrgentLayout()">
+            <div class="flex flex-col">
+              <label for="urgent-check" id="urgent-text" class="font-bold text-sm text-neutral-200 cursor-pointer transition-all">🚨 긴급 기도 요청</label>
+              <p class="text-xs text-neutral-400">위급한 상황으로 즉각 기도가 필요한 경우</p>
+            </div>
+           </div>
+           
+           <div id="urgent-contact-wrap" class="hidden mt-4 pt-4 border-t border-purple-900/60 space-y-2">
+             <label class="text-xs font-semibold text-rose-400">연락처 (긴급 기도 발송 필수)</label>
+             <input type="text" id="urgent-contact" inputmode="numeric" placeholder="010-0000-0000" class="w-full h-11 px-4 rounded-xl bg-[#1e1b3b]/60 border border-purple-500/30 text-sm text-white">
+           </div>
+          </section>
+
+          <section class="rounded-2xl p-5 bg-[#1e1b3b]/90 border border-purple-500/40 space-y-4">
+           <h2 class="section-title"><span class="section-title-number">03</span> <span class="section-title-divider"></span> <span class="text-right text-sm text-neutral-300">공개범위</span></h2>
+           <div class="space-y-3 text-sm">
+             <div class="flex justify-between items-center bg-black/20 p-3 rounded-xl">
+               <div><span class="font-bold">👥 모든 선생님들</span><p class="text-xs text-neutral-400">고등부 선생님 전체 공유</p></div>
+               <div class="flex gap-1"><button type="button" class="vis-leaders px-3 py-1.5 rounded-lg border border-purple-500/30 text-xs text-neutral-400 bg-[#1e1b3b]/60" onclick="selectVisibility('leaders', 'real')">실명</button><button type="button" class="vis-leaders px-3 py-1.5 rounded-lg border border-purple-500/30 text-xs text-neutral-400 bg-[#1e1b3b]/60" onclick="selectVisibility('leaders', 'anonymous')">익명</button></div>
+             </div>
+             <div class="flex justify-between items-center bg-black/20 p-3 rounded-xl">
+               <div><span class="font-bold">⛪ 고등부 친구들</span><p class="text-xs text-neutral-400">공동체 기도방에 오픈</p></div>
+               <div class="flex gap-1"><button type="button" class="vis-all px-3 py-1.5 rounded-lg border border-purple-500/30 text-xs text-neutral-400 bg-[#1e1b3b]/60" onclick="selectVisibility('all', 'real')">실명</button><button type="button" class="vis-all px-3 py-1.5 rounded-lg border border-purple-500/30 text-xs text-neutral-400 bg-[#1e1b3b]/60" onclick="selectVisibility('all', 'anonymous')">익명</button></div>
+             </div>
+             <p class="text-[11px] text-amber-300/80 text-center leading-normal">※ '전도사님만 비밀 기도'를 원하시면 아래 제출버튼 우측의 비밀 체크를 사용해 주세요.</p>
+           </div>
+          </section>
+
+          <div class="flex gap-2">
+            <button type="submit" id="submit-btn" class="flex-1 submit-btn h-14 rounded-xl font-bold text-white tracking-wide flex items-center justify-center gap-2 shadow-lg">
+             <span id="submit-text">🕊️ 기도제목 보내기</span>
+             <span id="submit-spinner" class="hidden animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+            </button>
+            <button type="button" id="pastor-only-btn" onclick="togglePastorOnly()" class="px-4 h-14 rounded-xl border border-purple-500/40 bg-[#1e1b3b]/60 hover:bg-purple-950/60 transition-all flex flex-col items-center justify-center text-neutral-400">
+              <i data-lucide="lock" class="w-5 h-5"></i>
+              <span class="text-[9px] mt-0.5 whitespace-nowrap font-bold">교역자만</span>
+            </button>
+          </div>
+        </form>
+      </main>
+
+      <main id="tab-community" class="w-full hidden space-y-5 float-up">
+        <header class="text-center py-2 flex flex-col items-center">
+          <h2 class="text-2xl font-black font-display text-transparent bg-clip-text bg-gradient-to-r from-violet-300 to-fuchsia-300">공동체 기도방</h2>
+          <p class="text-xs text-violet-300/70 font-light mt-0.5">우리가 함께 기도할 때 기적이 일어납니다.</p>
+        </header>
+
+        <section class="grid grid-cols-5 gap-1.5 bg-[#1e1b3b]/80 border border-purple-800/40 p-2.5 rounded-2xl">
+          <button onclick="toggleGradeFilter('전체')" id="filter-all" class="flex flex-col items-center justify-center py-2 rounded-xl border border-purple-500/50 bg-violet-600/30 text-white transition-all">
+            <span class="text-[10px] font-medium text-purple-300">전체</span>
+            <span class="text-sm font-black mt-0.5" id="count-all">0</span>
+          </button>
+          <button onclick="toggleGradeFilter('고1')" id="filter-고1" class="flex flex-col items-center justify-center py-2 rounded-xl border border-purple-900/40 bg-black/20 text-neutral-400 transition-all">
+            <span class="text-[10px] font-medium">고1</span>
+            <span class="text-sm font-bold mt-0.5" id="count-고1">0</span>
+          </button>
+          <button onclick="toggleGradeFilter('고2')" id="filter-고2" class="flex flex-col items-center justify-center py-2 rounded-xl border border-purple-900/40 bg-black/20 text-neutral-400 transition-all">
+            <span class="text-[10px] font-medium">고2</span>
+            <span class="text-sm font-bold mt-0.5" id="count-고2">0</span>
+          </button>
+          <button onclick="toggleGradeFilter('고3')" id="filter-고3" class="flex flex-col items-center justify-center py-2 rounded-xl border border-purple-900/40 bg-black/20 text-neutral-400 transition-all">
+            <span class="text-[10px] font-medium">고3</span>
+            <span class="text-sm font-bold mt-0.5" id="count-고3">0</span>
+          </button>
+          <button onclick="toggleGradeFilter('중등')" id="filter-중등" class="flex flex-col items-center justify-center py-2 rounded-xl border border-purple-900/40 bg-black/20 text-neutral-400 transition-all">
+            <span class="text-[10px] font-medium">중등</span>
+            <span class="text-sm font-bold mt-0.5" id="count-중등">0</span>
+          </button>
+        </section>
+
+        <div class="flex justify-between items-center px-1">
+          <span class="text-xs text-purple-300 font-medium" id="viewing-count">검색된 기도: 0개</span>
+          <div class="flex bg-black/30 border border-purple-800/40 p-0.5 rounded-lg text-xs">
+            <button onclick="setSortOrder('desc')" id="sort-desc" class="px-2.5 py-1 bg-purple-800/60 rounded-md text-white font-bold transition-all">최신순</button>
+            <button onclick="setSortOrder('asc')" id="sort-asc" class="px-2.5 py-1 text-neutral-400 rounded-md transition-all">과거순</button>
+          </div>
+        </div>
+
+        <div id="community-feed" class="space-y-4 max-h-[55vh] overflow-y-auto pr-1"></div>
+      </main>
+
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden">
+   <div class="bg-violet-600 text-white px-6 py-3 rounded-xl text-sm font-medium shadow-lg toast-enter flex items-center gap-2">
+     <span id="toast-msg">기도제목이 전달되었습니다 🙏</span>
+   </div>
+  </div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrsz-1AwsS1Rb5T3a2JHHr6CdeOv7KXXQ5UzG58gAaM1YFsUDrw_cAe-gMFG0-uUn6Ag/exec";
+
+    let currentGender = '';
+    let visibilityConfig = { leaders: '', all: '' };
+    let isPastorOnly = false;
+    let allRawPrayers = []; 
+    let activeFilters = new Set(['전체']); 
+    let sortOrder = 'desc'; 
+
+    const bibleVerses = [
+      { text: '"아무 것도 염려하지 말고 다만 모든 일에 기도와 간구로 너희 구할 것을 감사함으로 아뢰라"', ref: '(빌 4:6)' },
+      { text: '"너는 내게 부르짖으라 내가 네게 응답하겠고 네가 알지 못하는 크고 은밀한 일을 네게 보이리라"', ref: '(렘 33:3)' },
+      { text: '"구하라 그리하면 너희에게 주실 것이요 찾으라 그리하면 찾아낼 것이요"', ref: '(마 7:7)' },
+      { text: '"내 이름으로 무엇이든지 내게 구하면 내가 행하리라"', ref: '(요 14:14)' },
+      { text: '"여호와는 마음을 상한 자를 가까이 하시고 충심으로 통회하는 자를 구원하시는도다"', ref: '(시 34:18)' }
+    ];
+
+    window.addEventListener('load', () => {
+      lucide.createIcons();
+      const selected = bibleVerses[Math.floor(Math.random() * bibleVerses.length)];
+      document.getElementById('word-text').textContent = selected.text;
+      document.getElementById('word-ref').textContent = selected.ref;
+      fetchCommunityPrayers();
+    });
+
+    function toggleSidebar(open) {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      if (open) {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+        setTimeout(() => overlay.classList.add('opacity-100'), 10);
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.remove('opacity-100');
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+      }
+    }
+
+    function switchTab(target) {
+      toggleSidebar(false);
+      const subTab = document.getElementById('tab-submit');
+      const comTab = document.getElementById('tab-community');
+      const subBtn = document.getElementById('menu-submit-btn');
+      const comBtn = document.getElementById('menu-community-btn');
+
+      if (target === 'submit') {
+        subTab.classList.remove('hidden');
+        comTab.classList.add('hidden');
+        subBtn.className = "w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-violet-600/30 text-white font-bold border border-violet-500/40 text-left transition-all";
+        comBtn.className = "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-violet-200 hover:bg-white/5 font-medium text-left transition-all";
+      } else {
+        subTab.classList.add('hidden');
+        comTab.classList.remove('hidden');
+        comBtn.className = "w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-violet-600/30 text-white font-bold border border-violet-500/40 text-left transition-all";
+        subBtn.className = "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-violet-200 hover:bg-white/5 font-medium text-left transition-all";
+        fetchCommunityPrayers();
+      }
+    }
+
+    function selectGender(gender) {
+      currentGender = gender;
+      document.querySelectorAll('.gender-btn').forEach(btn => {
+        if (btn.textContent === gender) {
+          btn.className = "flex-1 h-11 gender-btn rounded-xl border border-purple-500 bg-purple-500/20 text-white font-bold text-sm transition-all";
+        } else {
+          btn.className = "flex-1 h-11 gender-btn rounded-xl border border-purple-500/30 text-neutral-400 bg-[#1e1b3b]/60 text-sm transition-all";
+        }
+      });
+    }
+
+    function updateCharCount() {
+      const len = document.getElementById('prayer-text').value.length;
+      document.getElementById('char-count').textContent = `${len}/1500`;
+    }
+
+    function updateUrgentLayout() {
+      const isChecked = document.getElementById('urgent-check').checked;
+      const label = document.getElementById('urgent-text');
+      const wrap = document.getElementById('urgent-contact-wrap');
+      if (isChecked) {
+        label.className = "font-bold text-sm text-rose-500 cursor-pointer animate-pulse";
+        wrap.classList.remove('hidden');
+      } else {
+        label.className = "font-bold text-sm text-neutral-200 cursor-pointer";
+        wrap.classList.add('hidden');
+      }
+    }
+
+    function selectVisibility(group, type) {
+      visibilityConfig[group] = type;
+      const btns = document.querySelectorAll(group === 'leaders' ? '.vis-leaders' : '.vis-all');
+      btns.forEach(btn => {
+        const cond = type === 'real' ? btn.textContent === '실명' : btn.textContent === '익명';
+        if (cond) {
+          btn.className = `vis-${group} px-3 py-1.5 rounded-lg border border-purple-500 bg-purple-500/20 text-xs text-white font-bold`;
+        } else {
+          btn.className = `vis-${group} px-3 py-1.5 rounded-lg border border-purple-500/30 text-xs text-neutral-400 bg-[#1e1b3b]/60`;
+        }
+      });
+    }
+
+    function togglePastorOnly() {
+      isPastorOnly = !isPastorOnly;
+      const btn = document.getElementById('pastor-only-btn');
+      if (isPastorOnly) {
+        btn.className = "px-4 h-14 rounded-xl border border-amber-500 bg-amber-500/20 text-amber-300 font-bold flex flex-col items-center justify-center shadow-lg";
+        showToast("💡 '교역자 비밀기도' 모드가 켜졌습니다.");
+      } else {
+        btn.className = "px-4 h-14 rounded-xl border border-purple-500/40 bg-[#1e1b3b]/60 hover:bg-purple-950/60 transition-all flex flex-col items-center justify-center text-neutral-400";
+      }
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const userName = document.getElementById('user-name').value.trim();
+      const userGrade = document.getElementById('user-grade').value;
+      const prayerText = document.getElementById('prayer-text').value.trim();
+      const isUrgent = document.getElementById('urgent-check').checked;
+      const urgentContact = document.getElementById('urgent-contact').value.trim();
+
+      if (!userName || !currentGender || !userGrade || !prayerText) {
+        showToast("⚠️ 필수 입력 항목을 확인해 주세요.");
+        return;
+      }
+      if (!isPastorOnly && (!visibilityConfig.leaders || !visibilityConfig.all)) {
+        showToast("⚠️ 공개범위를 선택해 주세요.");
+        return;
+      }
+      if (isUrgent && !urgentContact) {
+        showToast("⚠️ 긴급 연락처를 정확히 기재해 주세요.");
+        return;
+      }
+
+      const btn = document.getElementById('submit-btn');
+      const submitText = document.getElementById('submit-text');
+      const spinner = document.getElementById('submit-spinner');
+      
+      btn.disabled = true;
+      submitText.classList.add('hidden');
+      spinner.classList.remove('hidden');
+
+      const packet = {
+        action: "submitPrayer",
+        data: {
+          user_name: userName,
+          user_gender: currentGender,
+          user_grade: userGrade,
+          prayer_text: prayerText,
+          is_urgent: isUrgent,
+          urgent_contact: isUrgent ? urgentContact : '',
+          visibility_pastor: isPastorOnly ? "secret" : "real",
+          visibility_leaders: isPastorOnly ? "secret" : visibilityConfig.leaders,
+          visibility_all: isPastorOnly ? "secret" : visibilityConfig.all
+        }
+      };
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          body: JSON.stringify(packet)
+        });
+
+        showToast("기도제목 전송 성공! 마음 모아 기도할게요 🙏");
+        spawnConfetti();
+        document.getElementById('prayer-form').reset();
+        document.getElementById('char-count').textContent = '0/1500';
+        isPastorOnly = false;
+        document.getElementById('pastor-only-btn').className = "px-4 h-14 rounded-xl border border-purple-500/40 bg-[#1e1b3b]/60 hover:bg-purple-950/60 transition-all flex flex-col items-center justify-center text-neutral-400";
+        selectGender('');
+        selectVisibility('leaders', '');
+        selectVisibility('all', '');
+        updateUrgentLayout();
+
+      } catch (err) {
+        showToast("😢 전송 실패. 다시 시도해 주세요.");
+      } finally {
+        btn.disabled = false;
+        submitText.classList.remove('hidden');
+        spinner.classList.add('hidden');
+      }
+    }
+
+    async function fetchCommunityPrayers() {
+      const feed = document.getElementById('community-feed');
+      feed.innerHTML = `<div class="text-center py-8 text-sm text-purple-400"><span class="animate-pulse">🙏 실시간 기도 리스트 가져오는 중...</span></div>`;
+
+      try {
+        const response = await fetch(`${SCRIPT_URL}?action=getCommunityPrayers`);
+        let result = [];
+        if(response.ok) {
+          result = await response.json();
+          allRawPrayers = result.data || [];
+        } else {
+          allRawPrayers = [
+            { grade: '고1', name: '김한솔', text: '다가오는 모의고사에서 불안해하지 않고 지혜롭게 치러낼 수 있도록 담대함을 주세요!', date: new Date().toISOString(), urgent: '일반', visAll: 'real' },
+            { grade: '고3', name: '익명', text: '입시 진로 결정을 앞두고 주님의 뜻을 구합니다. 선하게 인도해 주세요.', date: new Date().toISOString(), urgent: '일반', visAll: 'anonymous' },
+            { grade: '고2', name: '이은지', text: '친구 관계 속에서 지혜를 주시고 주님의 사랑을 흘려보내는 통로가 되게 해주세요.', date: new Date().toISOString(), urgent: '일반', visAll: 'real' }
+          ];
+        }
+        renderCommunityFeed();
+      } catch (e) {
+        allRawPrayers = [
+          { grade: '고1', name: '김한솔', text: '다가오는 모의고사에서 불안해하지 않고 지혜롭게 치러낼 수 있도록 담대함을 주세요!', date: new Date().toISOString(), urgent: '일반', visAll: 'real' },
+          { grade: '고3', name: '익명', text: '입시 진로 결정을 앞두고 주님의 뜻을 구합니다. 선하게 인도해 주세요.', date: new Date().toISOString(), urgent: '일반', visAll: 'anonymous' },
+          { grade: '고2', name: '이은지', text: '친구 관계 속에서 지혜를 주시고 주님의 사랑을 흘려보내는 통로가 되게 해주세요.', date: new Date().toISOString(), urgent: '일반', visAll: 'real' }
+        ];
+        renderCommunityFeed();
+      }
+    }
+
+    function renderCommunityFeed() {
+      const counts = { 전체: 0, 고1: 0, 고2: 0, 고3: 0, 중등: 0 };
+      allRawPrayers.forEach(p => {
+        counts['전체']++;
+        if (counts[p.grade] !== undefined) counts[p.grade]++;
+      });
+
+      for (let key in counts) {
+        document.getElementById(`count-${key}`).textContent = counts[key];
+      }
+
+      let filtered = [];
+      if (activeFilters.has('전체')) {
+        filtered = [...allRawPrayers];
+      } else {
+        filtered = allRawPrayers.filter(p => activeFilters.has(p.grade));
+      }
+
+      filtered.sort((a, b) => {
+        return sortOrder === 'desc' ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date);
+      });
+
+      document.getElementById('viewing-count').textContent = `검색된 기도: ${filtered.length}개`;
+
+      const feed = document.getElementById('community-feed');
+      if (filtered.length === 0) {
+        feed.innerHTML = `<div class="text-center py-12 text-xs text-neutral-400">오픈된 공동체 기도제목이 아직 없습니다 🕊️</div>`;
+        return;
+      }
+
+      let anonymousCounters = { 고1: 0, 고2: 0, 고3: 0, 중등: 0 };
+      let orderedRaw = [...allRawPrayers].sort((a,b) => new Date(a.date) - new Date(b.date));
+      let anonMap = new Map();
+      
+      orderedRaw.forEach(p => {
+        if(p.visAll === 'anonymous' || p.name === '익명') {
+          anonymousCounters[p.grade]++;
+          anonMap.set(p.date + p.text, `${p.grade}마을 친구(${anonymousCounters[p.grade]})`);
+        }
+      });
+
+      feed.innerHTML = '';
+      filtered.forEach(p => {
+        const isAnon = p.visAll === 'anonymous' || p.name === '익명';
+        const displayName = isAnon ? anonMap.get(p.date + p.text) : p.name;
+        
+        const card = document.createElement('div');
+        card.className = "p-4 rounded-2xl bg-[#1e1b3b]/90 border border-purple-900/60 space-y-2 relative overflow-hidden";
+        card.innerHTML = `
+          <div class="flex justify-between items-center text-xs">
+            <span class="${isAnon ? 'text-fuchsia-400' : 'text-violet-300'} font-bold">${displayName}</span>
+            <span class="text-neutral-400 text-[10px]">${new Date(p.date).toLocaleDateString()}</span>
+          </div>
+          <p class="text-sm text-neutral-200 leading-relaxed whitespace-pre-wrap">${p.text}</p>
+          <div class="flex justify-between items-center pt-2 border-t border-purple-900/40 text-xs">
+            <span class="px-2 py-0.5 rounded bg-purple-950 text-purple-300 text-[10px]">${p.grade}마을</span>
+            <button onclick="prayTogether(this)" class="flex items-center gap-1 text-violet-400 hover:text-rose-400 transition-all font-medium">
+              <i data-lucide="heart" class="w-3.5 h-3.5"></i> <span>함께기도 <b class="count-num">0</b></span>
+            </button>
+          </div>
+        `;
+        feed.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    function toggleGradeFilter(grade) {
+      if (grade === '전체') {
+        activeFilters.clear();
+        activeFilters.add('전체');
+      } else {
+        if (activeFilters.has('전체')) activeFilters.delete('전체');
+        if (activeFilters.has(grade)) {
+          activeFilters.delete(grade);
+          if (activeFilters.size === 0) activeFilters.add('전체');
+        } else {
+          activeFilters.add(grade);
+        }
+      }
+
+      const grades = ['전체', '고1', '고2', '고3', '중등'];
+      grades.forEach(g => {
+        const btn = document.getElementById(`filter-${g}`);
+        if (activeFilters.has(g)) {
+          btn.className = "flex flex-col items-center justify-center py-2 rounded-xl border border-purple-500 bg-violet-600/30 text-white transition-all";
+          btn.querySelector('span:last-child').className = "text-sm font-black mt-0.5";
+        } else {
+          btn.className = "flex flex-col items-center justify-center py-2 rounded-xl border border-purple-900/40 bg-black/20 text-neutral-400 transition-all";
+          btn.querySelector('span:last-child').className = "text-sm font-bold mt-0.5";
+        }
+      });
+      renderCommunityFeed();
+    }
+
+    function setSortOrder(order) {
+      sortOrder = order;
+      const descBtn = document.getElementById('sort-desc');
+      const ascBtn = document.getElementById('sort-asc');
+      
+      if (order === 'desc') {
+        descBtn.className = "px-2.5 py-1 bg-purple-800/60 rounded-md text-white font-bold transition-all";
+        ascBtn.className = "px-2.5 py-1 text-neutral-400 rounded-md transition-all";
+      } else {
+        ascBtn.className = "px-2.5 py-1 bg-purple-800/60 rounded-md text-white font-bold transition-all";
+        descBtn.className = "px-2.5 py-1 text-neutral-400 rounded-md transition-all";
+      }
+      renderCommunityFeed();
+    }
+
+    function prayTogether(btn) {
+      const icon = btn.querySelector('i');
+      const countEl = btn.querySelector('.count-num');
+      let count = parseInt(countEl.textContent);
+      
+      if(icon.classList.contains('fill-current')) {
+        icon.classList.remove('fill-current', 'text-rose-500');
+        countEl.textContent = count - 1;
+      } else {
+        icon.classList.add('fill-current', 'text-rose-500');
+        countEl.textContent = count + 1;
+        btn.classList.add('scale-110');
+        setTimeout(() => btn.classList.remove('scale-110'), 150);
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').textContent = msg;
+      toast.classList.remove('hidden');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => toast.classList.add('hidden'), 2500);
+    }
+
+    function spawnConfetti() {
+      const colors = ['#fbbf24', '#f59e0b', '#d97706', '#fcd34d', '#ffffff'];
+      const wrapper = document.getElementById('app-wrapper');
+      for (let i = 0; i < 20; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.top = '40%';
+        piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDelay = Math.random() * 0.5 + 's';
+        wrapper.appendChild(piece);
+        setTimeout(() => piece.remove(), 2000);
+      }
+    }
+  </script>
+ </body>
+</html>
