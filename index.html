@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="ko" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>prayer request_hsm.high</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&amp;family=Playfair+Display:ital,wght@0,700;1,700&amp;display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans KR"', 'sans-serif'],
+            display: ['"Playfair Display"', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes floatUp {
+      0% { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    @keyframes confetti-fall {
+      0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(60px) rotate(360deg); opacity: 0; }
+    }
+    .float-up { animation: floatUp 0.6s ease-out forwards; }
+    .float-up-1 { animation-delay: 0.1s; opacity: 1; }
+    .float-up-2 { animation-delay: 0.2s; opacity: 1; }
+    .float-up-3 { animation-delay: 0.3s; }
+    .float-up-4 { animation-delay: 0.4s; }
+    .float-up-5 { animation-delay: 0.5s; }
+    .float-up-6 { animation-delay: 0.6s; }
+    .shimmer-text {
+      background: linear-gradient(90deg, #a855f7, #d946ef, #ec4899, #a855f7);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 3s linear infinite;
+    }
+    .submit-btn {
+      background: linear-gradient(135deg, #6d28d9, #9333ea, #a855f7);
+      background-size: 200% 200%;
+      transition: all 0.4s ease;
+    }
+    .submit-btn:hover {
+      background-position: right center;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(168, 85, 247, 0.35);
+    }
+    .submit-btn:disabled {
+      opacity: 0.4;
+      transform: none;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+    .toast-enter { animation: floatUp 0.4s ease-out; }
+    
+    /* 📌 [중요] 불빛 반사 완전 제거 및 0.45 테두리 고정 */
+    input:focus, textarea:focus, select:focus {
+      outline: none !important;
+      box-shadow: none !important;
+      border-color: rgba(168, 85, 247, 0.45) !important;
+    }
+    
+    #user-name,
+    #urgent-contact-1,
+    #urgent-contact-2,
+    #prayer-text {
+      color: #ffffff !important;
+      caret-color: #ffffff !important;
+    }
+    
+    #user-name::placeholder,
+    #urgent-contact-1::placeholder,
+    #urgent-contact-2::placeholder,
+    #prayer-text::placeholder {
+      color: rgba(156, 163, 175, 0.6) !important;
+    }
+    
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+    select {
+      appearance: none;
+    }
+    select option {
+      background: rgba(20, 8, 45, 0.9);
+      color: #ffffff;
+    }
+    .confetti-piece {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      animation: confetti-fall 1.5s ease-out forwards;
+    }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.4); border-radius: 99px; }
+    
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 2.5fr 1fr 3fr 1fr 3fr;
+      align-items: center;
+      width: 100%;
+      box-sizing: border-box;
+      gap: 0;
+    }
+    .contact-box-010 {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 400;
+      font-size: 12px;
+      color: #d4d4d8;
+      background: rgba(20, 8, 45, 0.6);
+      /* 고정 항목 기본 0.45 */
+      border: 1px solid rgba(168, 85, 247, 0.45);
+      border-radius: 0.75rem;
+    }
+    .contact-input {
+      height: 44px;
+      text-align: center;
+      font-size: 12px;
+      border-radius: 0.75rem;
+      background: rgba(20, 8, 45, 0.6);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      width: 100%;
+    }
+    .contact-separator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(156, 163, 175, 0.6);
+      font-size: 12px;
+    }
+
+    .custom-toggle-btn {
+      background: rgba(20, 8, 45, 0.6) !important;
+      border: 1px solid rgba(168, 85, 247, 0.3) !important;
+      transition: all 0.2s ease-in-out;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+    .custom-toggle-btn.inactive {
+      color: rgba(156, 163, 175, 0.6) !important;
+      border: 1px solid rgba(168, 85, 247, 0.3) !important;
+    }
+    /* 활성화 시 테두리 투명도를 0.45로 밝게 수정 */
+    .custom-toggle-btn.active {
+      color: #ffffff !important;
+      border: 1px solid rgba(168, 85, 247, 0.45) !important;
+    }
+    * { box-sizing: border-box; }
+  </style>
+ </head>
+ <body class="h-full text-neutral-100 font-sans" style="background: linear-gradient(135deg, #0f0520 0%, #1e0a3c 50%, #0f0520 100%);">
+  <div id="app-wrapper" class="h-full w-full overflow-auto">
+   <div class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:0;">
+    <div class="absolute top-0 right-0 w-96 h-96 rounded-full" style="background: radial-gradient(circle, rgba(196,181,253,0.12) 0%, transparent 70%);"></div>
+    <div class="absolute bottom-0 left-0 w-80 h-80 rounded-full" style="background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%);"></div>
+   </div>
+   <div class="relative z-10 max-w-lg mx-auto px-4 py-8" style="min-height:100%;">
+    <header class="text-center mb-8 float-up float-up-1">
+     <p id="church-name" class="text-xs tracking-[0.3em] uppercase text-purple-400 mb-4 font-medium">한소망교회 고등부</p>
+     <h1 id="main-title" class="text-3xl font-black mb-2 shimmer-text font-display" style="line-height:1.3;">Prayer Request</h1>
+     <p id="subtitle-text" class="text-neutral-400 text-sm font-light">하나님께 마음을 나누는 안전한 공간</p>
+    </header>
+    <main id="form-tab" role="tabpanel">
+     <form id="prayer-form" onsubmit="handleSubmit(event)" novalidate>
+      <section class="mb-6 float-up float-up-3 rounded-2xl p-6" aria-labelledby="personal-heading" style="background: rgba(30, 10, 60, 0.8); border: 1px solid rgba(168, 85, 247, 0.3); position: relative; z-index: 20;">
+       <h2 id="personal-heading" class="font-semibold flex items-center gap-2 mb-4" style="color: #ffffff;"><span style="color: #fbbf24; font-size: 1rem; min-width: 24px;">01</span> <span class="flex-1 h-px" style="background: rgba(251, 191, 36, 0.5);"></span> <span style="font-size: 1rem; text-align: right; flex-shrink: 0; color: #fbbf24;">인적사항</span></h2>
+       <div class="space-y-3">
+        <div><label for="user-name" class="block mb-2 font-semibold text-sm" style="color: #ffffff;"><span style="color: #fbbf24;">*</span> 이름</label> <input type="text" id="user-name" placeholder="이름을 입력해 주세요." class="w-full h-11 rounded-xl px-4 text-xs" style="background: rgba(20, 8, 45, 0.6); border: 1px solid rgba(168, 85, 247, 0.3);" maxlength="1500" onkeypress="if(event.key==='Enter') event.preventDefault();">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+         <div><label class="block mb-2 font-semibold text-sm" style="color: #ffffff;"><span style="color: #fbbf24;">*</span> 성별</label>
+          <div class="flex gap-2">
+            <button type="button" id="gender-male" class="flex-1 custom-toggle-btn inactive h-11 rounded-xl text-center font-normal text-xs" onclick="selectGender('남자')">남자</button> 
+            <button type="button" id="gender-female" class="flex-1 custom-toggle-btn inactive h-11 rounded-xl text-center font-normal text-xs" onclick="selectGender('여자')">여자</button>
+          </div>
+         </div>
+         <div><label for="user-grade" class="block mb-2 font-semibold text-sm" style="color: #ffffff;"><span style="color: #fbbf24;">*</span> 마을</label> <select id="user-grade" class="w-full h-11 rounded-xl px-4 cursor-pointer text-xs" style="background: rgba(20, 8, 45, 0.6); border: 1px solid rgba(168, 85, 247, 0.3); color: rgba(156, 163, 175, 0.6);" onchange="updateSelectStyle(this)"> <option value="" disabled selected>마을을 선택해 주세요.</option> <option value="고1">고1 마을</option> <option value="고2">고2 마을</option> <option value="고3">고3 마을</option> <option value="중등">중등 마을</option> </select>
+         </div>
+        </div>
+       </div>
+      </section>
+
+      <section class="mb-6 float-up float-up-4 rounded-2xl p-6" aria-labelledby="prayer-heading" style="background: rgba(30, 10, 60, 0.8); border: 1px solid rgba(168, 85, 247, 0.3); position: relative; z-index: 20;">
+       <h2 id="prayer-heading" class="font-semibold flex items-center gap-2 mb-4" style="color: #ffffff;"><span style="color: #fbbf24; font-size: 1rem; min-width: 24px;">02</span> <span class="flex-1 h-px" style="background: rgba(251, 191, 36, 0.5);"></span> <span style="font-size: 1rem; text-align: right; flex-shrink: 0; color: #fbbf24;">기도제목</span></h2><label for="prayer-text" class="block mb-2 font-semibold text-sm" style="color: #ffffff;"><span style="color: #fbbf24;">*</span> 나의 기도</label>
+       <textarea id="prayer-text" rows="6" maxlength="1500" placeholder="구체적인 상황을 적어주시면,&#13;&#10;그 고백을 마음 깊이 함께 기도하겠습니다." class="w-full rounded-xl px-4 py-3 text-xs resize-none" style="background: rgba(20, 8, 45, 0.6); border: 1px solid rgba(168, 85, 247, 0.3);" oninput="updateCharCount(); limitTextLength(this)"></textarea>
+       <div class="text-right mb-4"><span id="char-count" class="text-xs text-neutral-400">0/1,500</span>
+       </div>
+       <div class="flex items-start gap-2.5">
+        <div class="relative flex items-center h-5 mt-0.5"><input type="checkbox" id="urgent-check" class="sr-only peer" onchange="updateUrgentStyle()"> <label for="urgent-check" class="w-5 h-5 rounded-md border-2 border-purple-600 flex items-center justify-center cursor-pointer transition-all peer-checked:bg-red-500 peer-checked:border-red-500">
+          <svg class="hidden peer-checked:block w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24" style="stroke-width: 4;"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+          </svg></label>
+        </div>
+        <div class="flex flex-col"><label for="urgent-check" id="urgent-text" class="block font-semibold text-sm text-white cursor-pointer transition-colors">긴급 기도 요청</label>
+         <p class="text-[11px] text-neutral-300 italic leading-relaxed">위급한 상황(사고, 수술 등)으로 즉각적인 기도가 필요한 경우</p>
+        </div>
+       </div>
+       <div id="urgent-contact-wrap" class="hidden mt-4 pt-4 border-t border-neutral-700">
+        <label class="block text-[11px] uppercase tracking-wider text-neutral-300 mb-3 font-medium">
+         <span id="urgent-star" class="hidden text-[#fbbf24] text-[11px]">* </span>연락처(긴급 기도 요청 시 필수)
+        </label>
+        <div class="contact-grid">
+         <div class="contact-box-010">010</div>
+         <div class="contact-separator">-</div>
+         <input type="text" id="urgent-contact-1" inputmode="numeric" maxlength="4" placeholder="0000" class="contact-input text-xs font-normal text-gray-400/60" oninput="handleContactInput(this, 'urgent-contact-2')" onkeypress="preventEnterInContact(event)">
+         <div class="contact-separator">-</div>
+         <input type="text" id="urgent-contact-2" inputmode="numeric" maxlength="4" placeholder="0000" class="contact-input text-xs font-normal text-gray-400/60" oninput="handleContactInput(this, null)" onkeypress="preventEnterInContact(event)">
+        </div>
+       </div>
+      </section>
+
+      <section class="mb-6 float-up float-up-5 rounded-2xl p-6" aria-labelledby="visibility-heading" style="background: rgba(30, 10, 60, 0.8); border: 1px solid rgba(168, 85, 247, 0.3); position: relative; z-index: 20;">
+       <h2 id="visibility-heading" class="font-semibold flex items-center gap-2 mb-6" style="color: #ffffff;"><span style="color: #fbbf24; font-size: 1rem; min-width: 24px;">03</span> <span class="flex-1 h-px" style="background: rgba(251, 191, 36, 0.5);"></span> <span style="font-size: 1rem; text-align: right; flex-shrink: 0; color: #fbbf24;">공개범위</span></h2>
+       <div class="space-y-6">
+        <div>
+         <div class="block mb-2 font-semibold text-sm text-white">전도사님</div>
+         <div class="text-xs text-neutral-300 mb-4 leading-relaxed font-normal">여러분의 이름을 기억하며 깊이 기도합니다.</div>
+         <button type="button" class="w-full h-11 rounded-xl text-xs font-normal custom-toggle-btn active" disabled>😊 실명</button>
+        </div>
+        <div>
+         <div class="block mb-2 font-semibold text-sm text-white"><span style="color: #fbbf24;">*</span> 모든 선생님들</div>
+         <div class="text-xs text-neutral-300 mb-4 leading-relaxed font-normal">고등부 모든 선생님들이 함께 기도합니다.</div>
+         <div class="flex gap-2">
+           <button type="button" id="leaders-real" class="flex-1 h-11 rounded-xl text-center font-normal text-xs custom-toggle-btn inactive" onclick="selectIdentityOption('leaders', 'real')">😊 실명</button> 
+           <button type="button" id="leaders-anon" class="flex-1 h-11 rounded-xl text-center font-normal text-xs custom-toggle-btn inactive" onclick="selectIdentityOption('leaders', 'anonymous')">🤫 익명</button>
+         </div>
+        </div>
+        <div>
+         <div class="block mb-2 font-semibold text-sm text-white"><span style="color: #fbbf24;">*</span> 친구들</div>
+         <div class="text-xs text-neutral-300 mb-4 leading-relaxed font-normal">고등부 공동체 안에서 함께 나눕니다.</div>
+         <div class="flex gap-2">
+           <button type="button" id="all-real" class="flex-1 h-11 rounded-xl text-center font-normal text-xs custom-toggle-btn inactive" onclick="selectIdentityOption('all', 'real')">😊 실명</button> 
+           <button type="button" id="all-anon" class="flex-1 h-11 rounded-xl text-center font-normal text-xs custom-toggle-btn inactive" onclick="selectIdentityOption('all', 'anonymous')">🤫 익명</button>
+         </div>
+        </div>
+       </div>
+      </section>
+
+      <button type="submit" id="submit-btn" class="submit-btn float-up float-up-6 w-full py-4 rounded-2xl text-sm font-bold text-white tracking-wide flex items-center justify-center gap-2 mb-3"> 
+        <span id="submit-text">🕊️ 기도제목 보내기</span> 
+        <span id="submit-spinner" class="hidden inline-flex">
+          <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24">
+           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle> <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+        </span> 
+      </button>
+      
+      <div class="mb-8 text-neutral-400 italic" style="text-align: center;">
+       <p style="font-size: clamp(0.55rem, 2.2vw, 0.75rem); letter-spacing: var(--verse-letter-spacing, 0em); line-height: 1.6; margin: 0 0 0.5rem 0; white-space: nowrap; overflow: visible;">"우리가 서로 사랑하면 하나님이 우리 안에 거하시고 그의 사랑이 우리 안에 온전히 이루어지느니라"</p>
+       <p style="font-size: clamp(0.55rem, 2.2vw, 0.75rem); margin: 0;">(요일 4:12)</p>
+      </div>
+     </form>
+    </main>
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden">
+     <div class="bg-amber-600 text-white px-6 py-3 rounded-2xl text-sm font-medium shadow-lg shadow-amber-900/30 toast-enter flex items-center gap-2">
+      <span id="toast-msg">기도제목이 전달되었습니다 🙏</span>
+     </div>
+    </div>
+   </div>
+  </div>
+
+  <script>
+    let currentCategory = '학업';
+    let currentGender = '';
+    let allPrayers = [];
+    let visibilityIdentity = { leaders: '', all: '' };
+
+    const defaultConfig = {
+      main_title: 'Prayer Request',
+      subtitle_text: '하나님께 마음을 나누는 안전한 공간',
+      submit_button_text: '기도제목 보내기',
+      church_name: '한소망교회 고등부',
+      background_color: '#1a0f3d',
+      surface_color: '#1e0a3c',
+      text_color: '#f5f5f5',
+      accent_color: '#fbbf24',
+      secondary_action_color: '#a855f7',
+      font_family: 'Noto Sans KR',
+      font_size: 14
+    };
+
+    function applyConfig(config) {
+      const c = key => config[key] || defaultConfig[key];
+      document.getElementById('main-title').textContent = c('main_title');
+      document.getElementById('subtitle-text').textContent = c('subtitle_text');
+      document.getElementById('submit-text').innerHTML = '🕊️ ' + c('submit_button_text');
+      document.getElementById('church-name').textContent = c('church_name');
+      const font = c('font_family');
+      const baseSize = c('font_size');
+      document.body.style.fontFamily = `${font}, "Noto Sans KR", sans-serif`;
+      document.getElementById('main-title').style.fontSize = `${baseSize * 2.5}px`;
+      document.getElementById('subtitle-text').style.fontSize = `${baseSize * 0.9}px`;
+      document.getElementById('church-name').style.fontSize = `${baseSize * 1.1}px`;
+      
+      document.querySelectorAll('h2').forEach(h => {
+        h.style.fontSize = `${baseSize * 0.95}px`;
+      });
+      document.querySelectorAll('label').forEach(label => {
+        if (!label.classList.contains('sr-only') && !label.classList.contains('text-sm') && label.id !== 'urgent-text' && !label.classList.contains('text-xs')) {
+          label.style.fontSize = `${baseSize * 0.9}px`;
+        }
+      });
+    }
+
+    if (window.elementSdk && typeof window.elementSdk.init === 'function') {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => { applyConfig(config); },
+        mapToCapabilities: (config) => {
+          const c = key => config[key] || defaultConfig[key];
+          const makeColor = (key) => ({
+            get: () => c(key),
+            set: (v) => { config[key] = v; window.elementSdk.setConfig({ [key]: v }); }
+          });
+          return { recolorables: [makeColor('background_color'), makeColor('surface_color'), makeColor('text_color'), makeColor('accent_color'), makeColor('secondary_action_color')], borderables: [], fontEditable: { get: () => c('font_family'), set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } }, fontSizeable: { get: () => c('font_size'), set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } } };
+        },
+        mapToEditPanelValues: (config) => {
+          const c = key => config[key] || defaultConfig[key];
+          return new Map([['church_name', c('church_name')], ['main_title', c('main_title')], ['subtitle_text', c('subtitle_text')], ['submit_button_text', c('submit_button_text')]]);
+        }
+      });
+    } else {
+      applyConfig(defaultConfig);
+    }
+
+    if (window.dataSdk && typeof window.dataSdk.init === 'function') {
+      (async () => { await window.dataSdk.init({ onDataChanged(data) { allPrayers = data; } }); })();
+    }
+
+    function selectGender(gender) {
+      currentGender = gender;
+      const maleBtn = document.getElementById('gender-male');
+      const femaleBtn = document.getElementById('gender-female');
+      
+      if (gender === '남자') {
+        maleBtn.classList.remove('inactive');
+        maleBtn.classList.add('active');
+        femaleBtn.classList.remove('active');
+        femaleBtn.classList.add('inactive');
+      } else {
+        femaleBtn.classList.remove('inactive');
+        femaleBtn.classList.add('active');
+        maleBtn.classList.remove('active');
+        maleBtn.classList.add('inactive');
+      }
+    }
+    
+    function updateSelectStyle(select) {
+      if (select.value) {
+        select.style.color = '#ffffff';
+        setTimeout(() => {
+          document.querySelector('[aria-labelledby="prayer-heading"]').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50);
+      } else {
+        select.style.color = 'rgba(156, 163, 175, 0.6)';
+      }
+    }
+
+    function selectIdentityOption(vis, identity) {
+      visibilityIdentity[vis] = identity;
+      
+      if (vis === 'leaders') {
+        const realBtn = document.getElementById('leaders-real');
+        const anonBtn = document.getElementById('leaders-anon');
+        if (identity === 'real') {
+          realBtn.classList.remove('inactive');
+          realBtn.classList.add('active');
+          anonBtn.classList.remove('active');
+          anonBtn.classList.add('inactive');
+        } else {
+          anonBtn.classList.remove('inactive');
+          anonBtn.classList.add('active');
+          realBtn.classList.remove('active');
+          realBtn.classList.add('inactive');
+        }
+      } else if (vis === 'all') {
+        const realBtn = document.getElementById('all-real');
+        const anonBtn = document.getElementById('all-anon');
+        if (identity === 'real') {
+          realBtn.classList.remove('inactive');
+          realBtn.classList.add('active');
+          anonBtn.classList.remove('active');
+          anonBtn.classList.add('inactive');
+        } else {
+          anonBtn.classList.remove('inactive');
+          anonBtn.classList.add('active');
+          realBtn.classList.remove('active');
+          realBtn.classList.add('inactive');
+        }
+      }
+    }
+
+    function updateCharCount() {
+      document.getElementById('char-count').textContent = `${document.getElementById('prayer-text').value.length.toLocaleString()}/1,500`;
+    }
+
+    function limitTextLength(textarea) {
+      if (textarea.value.length > 1500) {
+        textarea.value = textarea.value.substring(0, 1500);
+        updateCharCount();
+      }
+    }
+
+    function handleContactInput(inputEl, nextInputId) {
+      inputEl.value = inputEl.value.replace(/[^0-9]/g, '').slice(0, 4);
+      if (inputEl.value.length === 4 && nextInputId) {
+        setTimeout(() => document.getElementById(nextInputId).focus(), 50);
+      } else if (inputEl.value.length === 4 && !nextInputId) {
+        setTimeout(() => {
+          document.querySelector('[aria-labelledby="visibility-heading"]').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50);
+      }
+    }
+    
+    function preventEnterInContact(e) {
+      if (e.key === 'Enter') e.preventDefault();
+    }
+
+    function updateUrgentStyle() {
+      const isChecked = document.getElementById('urgent-check').checked;
+      const urgentText = document.getElementById('urgent-text');
+      const urgentContactWrap = document.getElementById('urgent-contact-wrap');
+      const urgentStar = document.getElementById('urgent-star');
+      if (isChecked) {
+        urgentText.style.color = '#ef4444';
+        urgentContactWrap.classList.remove('hidden');
+        urgentStar.classList.remove('hidden');
+      } else {
+        urgentText.style.color = '#ffffff';
+        urgentContactWrap.classList.add('hidden');
+        urgentStar.classList.add('hidden');
+        document.getElementById('urgent-contact-1').value = '';
+        document.getElementById('urgent-contact-2').value = '';
+      }
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const userName = document.getElementById('user-name').value.trim();
+      const userGrade = document.getElementById('user-grade').value.trim();
+      const prayerText = document.getElementById('prayer-text').value.trim();
+      const isUrgent = document.getElementById('urgent-check').checked;
+      
+      if (!userName) return showToast('이름을 입력해 주세요.');
+      if (!currentGender) return showToast('성별을 선택해 주세요.');
+      if (!userGrade) return showToast('마을을 선택해 주세요.');
+      if (!prayerText) return showToast('기도제목을 입력해 주세요.');
+      if (!visibilityIdentity.leaders || !visibilityIdentity.all) return showToast('공개범위를 모두 선택해 주세요.');
+      
+      if (isUrgent) {
+        const contact1 = document.getElementById('urgent-contact-1').value.trim();
+        const contact2 = document.getElementById('urgent-contact-2').value.trim();
+        if (!contact1 || !contact2 || contact1.length !== 4 || contact2.length !== 4) {
+          return showToast('긴급 기도 요청 시 연락처 입력은 필수입니다.');
+        }
+      }
+
+      const btn = document.getElementById('submit-btn');
+      const submitText = document.getElementById('submit-text');
+      const spinner = document.getElementById('submit-spinner');
+      btn.disabled = true;
+      submitText.classList.add('hidden');
+      spinner.classList.remove('hidden');
+
+      const record = {
+        user_name: userName,
+        user_grade: userGrade,
+        user_gender: currentGender,
+        display_name: '익명',
+        category: currentCategory,
+        prayer_text: prayerText,
+        visibility_leaders: visibilityIdentity.leaders,
+        visibility_all: visibilityIdentity.all,
+        is_urgent: isUrgent,
+        urgent_contact: isUrgent ? `010-${document.getElementById('urgent-contact-1').value.trim()}-${document.getElementById('urgent-contact-2').value.trim()}` : '',
+        emoji_reaction: '🙏',
+        created_at: new Date().toISOString()
+      };
+
+      let result = { isOk: false };
+      if (window.dataSdk && typeof window.dataSdk.create === 'function') {
+        result = await window.dataSdk.create(record);
+      } else {
+        result = { isOk: true }; 
+      }
+
+      btn.disabled = false;
+      submitText.classList.remove('hidden');
+      spinner.classList.add('hidden');
+
+      if (result.isOk) {
+        showToast('기도제목이 전달되었습니다 🙏');
+        spawnConfetti();
+        document.getElementById('prayer-form').reset();
+        document.getElementById('char-count').textContent = '0/1,500';
+        document.getElementById('urgent-contact-1').value = '';
+        document.getElementById('urgent-contact-2').value = '';
+        visibilityIdentity = { leaders: '', all: '' };
+        document.getElementById('user-grade').style.color = 'rgba(156, 163, 175, 0.6)';
+        
+        document.querySelectorAll('.custom-toggle-btn').forEach(btn => {
+          btn.classList.remove('active');
+          btn.classList.add('inactive');
+        });
+        currentGender = '';
+        updateUrgentStyle();
+      } else {
+        showToast('전송에 실패했습니다. 다시 시도해주세요 😢');
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').textContent = msg;
+      toast.classList.remove('hidden');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => toast.classList.add('hidden'), 2500);
+    }
+
+    function spawnConfetti() {
+      const colors = ['#fbbf24', '#f59e0b', '#d97706', '#fcd34d', '#ffffff'];
+      const wrapper = document.getElementById('app-wrapper');
+      for (let i = 0; i < 20; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.top = '40%';
+        piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDelay = Math.random() * 0.5 + 's';
+        wrapper.appendChild(piece);
+        setTimeout(() => piece.remove(), 2000);
+      }
+    }
+
+    function adjustVerseLetterSpacing() {
+      const verse = document.querySelector('.mb-8.text-neutral-400');
+      if (!verse) return;
+      const containerWidth = verse.offsetWidth;
+      let letterSpacing = 0;
+      if (containerWidth < 250) letterSpacing = Math.max(0, (250 - containerWidth) / 3000);
+      document.documentElement.style.setProperty('--verse-letter-spacing', letterSpacing + 'em');
+    }
+
+    window.addEventListener('load', adjustVerseLetterSpacing);
+    window.addEventListener('resize', adjustVerseLetterSpacing);
+    setTimeout(adjustVerseLetterSpacing, 500);
+    lucide.createIcons();
+  </script>
+ </body>
+</html>
